@@ -19,9 +19,45 @@
 </header>
 
 <div class="checkout-page">
+
+    <!-- ==========================
+         DAFTAR ITEM CHECKOUT
+    ===========================-->
     <div class="checkout-items" id="checkoutItems"></div>
 
-    <aside class="checkout-summary" id="checkoutSummary"></aside>
+
+    <!-- ==========================
+         RINGKASAN CHECKOUT (RIGHT SIDE)
+    ===========================-->
+    <aside class="checkout-summary" id="checkoutSummary">
+
+        <!-- Ditambah: OPSI PEMBAYARAN -->
+        <div class="payment-section">
+            <h3>Metode Pembayaran</h3>
+
+            <label class="payment-option">
+                <input type="radio" name="payment" value="cash" id="payCash">
+                <span>Cash</span>
+            </label>
+
+            <label class="payment-option">
+                <input type="radio" name="payment" value="qris" id="payQRIS">
+                <span>QRIS</span>
+            </label>
+        </div>
+
+        <!-- Ditambah: TOTAL -->
+        <div class="total-section">
+            <h3>Total Belanja</h3>
+            <p id="checkoutTotal">Rp 0</p>
+        </div>
+
+        <!-- Ditambah: TOMBOL BAYAR -->
+        <button id="payButton" class="pay-btn disabled" disabled>
+            Bayar Sekarang
+        </button>
+
+    </aside>
 </div>
 
 <script src="checkout.js"></script>

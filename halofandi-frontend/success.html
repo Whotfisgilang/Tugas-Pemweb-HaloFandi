@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Success - HaloFandi</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="success-page">
+
+    <div class="success-box">
+        <h1>🎉 Pesanan Berhasil!</h1>
+        <p id="orderMessage"></p>
+        <p class="order-id"></p>
+
+        <a href="menu.html" class="nav-button">Kembali ke Menu</a>
+    </div>
+
+<script>
+    const order = JSON.parse(localStorage.getItem("lastOrder"));
+
+    if (order) {
+        document.querySelector(".order-id").textContent = 
+            "Order ID: " + order.orderID;
+
+        document.getElementById("orderMessage").textContent =
+            "Terimakasih sudah order, Silahkan tunggu makanan anda.";
+    }
+</script>
+
+</body>
+</html>

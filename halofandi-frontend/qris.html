@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QRIS Pembayaran</title>
+    <style>
+        body {
+            font-family: Arial;
+            text-align: center;
+            background: #f4f4f4;
+            padding: 20px;
+        }
+        .qr-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 400px;
+            margin: auto;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .pay-btn {
+            margin-top: 20px;
+            padding: 12px;
+            background: #007aff;
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            width: 100%;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Pembayaran QRIS</h2>
+
+<div class="qr-box">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Rickrolling_QR_code.png" width="250" alt="QRIS">
+
+    <h3>Total: Rp <span id="totalText"></span></h3>
+
+    <button class="pay-btn" onclick="finish()">Sudah Bayar</button>
+</div>
+
+<script>
+    document.getElementById("totalText").innerText =
+        Number(localStorage.getItem("totalPayment")).toLocaleString();
+
+    function finish() {
+        window.location.href = "success.html";
+    }
+</script>
+
+</body>
+</html>

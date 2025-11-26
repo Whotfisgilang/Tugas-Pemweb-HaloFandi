@@ -1,125 +1,138 @@
-//// checkout.js (REVISI TOTAL)
+document.addEventListener("DOMContentLoaded", () => {
+    loadCheckout();
+    setupPaymentSelection();
+});
 
-let cart = JSON.parse(localStorage.getItem("cart")) || [];
+let selectedPayment = null;
 
-const checkoutItems = document.getElementById("checkoutItems");
-const checkoutSummary = document.getElementById("checkoutSummary");
+function setupPaymentSelection() {
+    const radios = document.querySelectorAll("input[name='payment']");
+    const payBtn = document.querySelector(".checkout-btn");
 
-// Ambil userId dari JWT
-function getUserId() {
-    const token = localStorage.getItem("token");
-    if (!token) return null;
+    radios.forEach(radio => {
+        radio.addEventListener("change", () => {
+            selectedPayment = radio.value;
 
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return payload.id;   // sesuaikan kalau backend pakai "userId" atau "_id"
-}
-
-// ------------------ Render Items ------------------
-function renderItems() {
-    checkoutItems.innerHTML = `<h2>Pesanan Anda</h2>`;
-
-    cart.forEach((item, index) => {
-        const div = document.createElement("div");
-        div.className = "checkout-item";
-
-        div.innerHTML = `
-            <span class="checkout-item-name">${item.name}</span>
-            <span class="checkout-item-price">Rp ${item.price}</span>
-            <button class="remove-item-btn">Hapus</button>
-        `;
-
-        div.querySelector(".remove-item-btn").addEventListener("click", () => {
-            cart.splice(index, 1);
-            localStorage.setItem("cart", JSON.stringify(cart));
-            loadCheckout();
+            // Aktifkan tombol bayar
+            payBtn.classList.remove("disabled");
+            payBtn.style.background = "#007aff";
+            payBtn.disabled = false;
         });
-
-        checkoutItems.appendChild(div);
     });
 }
 
-// ------------------ Render Summary ------------------
-function renderSummary() {
-    const total = cart.reduce((a, b) => a + b.price, 0);
+function loadCheckout() {
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+    const checkoutItems = document.getElementById("checkoutItems");
+    const checkoutSummary = document.getElementById("checkoutSummary");
+
+    checkoutItems.innerHTML = "";
+    checkoutSummary.innerHTML = "";
+
+    if (cart.length === 0) {
+        checkoutItems.innerHTML = `
+            <div style="text-align:center; padding:40px; font-size:1.2rem; font-weight:600;">
+                Anda belum menambahkan apapun ke keranjang.<br><br>
+                <a href="menu.html" style="color:#007aff; font-size:1rem; font-weight:700;">
+                    Tambahkan terlebih dahulu
+                </a>
+            </div>
+        `;
+        return;
+    }
+
+    cart.forEach((item, index) => {
+        checkoutItems.innerHTML += `
+            <div class="checkout-item">
+                <span class="checkout-item-name">${item.name}</span>
+                <div style="display:flex; align-items:center;">
+                    <span class="checkout-item-price">Rp ${item.price.toLocaleString()}</span>
+                    <button class="remove-item-btn" onclick="removeItem(${index})">Hapus</button>
+                </div>
+            </div>
+        `;
+    });
+
+    const total = cart.reduce((sum, item) => sum + item.price, 0);
 
     checkoutSummary.innerHTML = `
-        <h3>Ringkasan</h3>
-
+        <h3>Ringkasan Belanja</h3>
         <div class="checkout-total-row">
             <span>Total</span>
-            <span>Rp ${total}</span>
+            <span>Rp ${total.toLocaleString()}</span>
         </div>
-
         <div class="payment-methods">
-            <h4>Metode Pembayaran</h4>
-
             <label class="payment-option">
-                <input type="radio" name="pay" value="transfer" checked>
-                <span>Transfer Bank</span>
+                <input type="radio" name="payment" value="cash"> Cash
             </label>
-
             <label class="payment-option">
-                <input type="radio" name="pay" value="qris">
-                <span>QRIS</span>
+                <input type="radio" name="payment" value="qris"> QRIS
             </label>
         </div>
-
-        <button id="checkoutBtn" class="checkout-btn">Buat Pesanan</button>
+        <button class="checkout-btn disabled" disabled onclick="pay(${total})">
+            Bayar Sekarang
+        </button>
     `;
-
-    document.getElementById("checkoutBtn").addEventListener("click", submitOrder);
 }
 
-// ------------------ Submit Order to Backend ------------------
-async function submitOrder() {
-    if (cart.length === 0) return alert("Keranjang kosong!");
+function removeItem(index) {
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+    cart.splice(index, 1);
+    localStorage.setItem("cart", JSON.stringify(cart));
+    loadCheckout();
+}
 
-    const userId = getUserId();
-    if (!userId) return alert("Anda belum login!");
 
-    const paymentMethod = document.querySelector("input[name='pay']:checked").value;
-
-    const orderBody = {
-        user: userId,
-        items: cart,
-        totalPrice: cart.reduce((a, b) => a + b.price, 0),
-        status: "Diproses"
-    };
-
+// 🔥 Fungsi kirim order ke MongoDB via backend
+async function sendOrderToDatabase(orderData) {
     try {
-        const res = await fetch("http://localhost:4000/api/orders", {
+        const res = await fetch("https://your-backend-url.com/api/orders", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + localStorage.getItem("token")
-            },
-            body: JSON.stringify(orderBody)
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(orderData)
         });
 
-        const data = await res.json();
-        if (!res.ok) return alert(data.message || "Gagal membuat pesanan");
-
-        // Clear cart
-        localStorage.removeItem("cart");
-
-        // Redirect by payment method
-        if (paymentMethod === "qris") {
-            window.location.href = `payment-qris.html?total=${orderBody.totalPrice}&orderId=${data._id}`;
-        } else {
-            alert("Pesanan berhasil dibuat!");
-            window.location.href = "menu.html";
-        }
-
+        return await res.json();
     } catch (error) {
-        console.error(error);
-        alert("Gagal terhubung ke server");
+        console.error("Gagal mengirim ke database:", error);
     }
 }
 
-// ------------------ Load ------------------
-function loadCheckout() {
-    renderItems();
-    renderSummary();
-}
 
-loadCheckout();
+// 🔥 Fungsi bayar
+async function pay(total) {
+    if (!selectedPayment) return;
+
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+    const orderID = "ODR-" + Date.now();
+
+    const orderData = {
+        orderID: orderID,
+        items: cart,
+        total: total,
+        paymentMethod: selectedPayment,
+        timestamp: new Date().toISOString()
+    };
+
+    // Kirim ke MongoDB
+    await sendOrderToDatabase(orderData);
+
+    // Simpan untuk halaman success
+    localStorage.setItem("lastOrder", JSON.stringify(orderData));
+
+    // Animasi loading sebelum redirect
+    document.body.innerHTML += `
+        <div class="loading-overlay">
+            <div class="loader"></div>
+            <p style="color:white; margin-top:15px;">Memproses pembayaran...</p>
+        </div>
+    `;
+
+    setTimeout(() => {
+        if (selectedPayment === "cash") {
+            window.location.href = "success.html";
+        } else {
+            window.location.href = "qris.html";
+        }
+    }, 1500);
+}
